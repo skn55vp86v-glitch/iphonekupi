@@ -5,20 +5,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>iPhonekupi Gaming</title>
-
 <style>
-* {
-  box-sizing: border-box;
-}
-
+* { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   background: #090914;
   color: white;
-  transition: 0.3s;
 }
-
 header {
   padding: 22px;
   background: #151529;
@@ -28,113 +22,77 @@ header {
   flex-wrap: wrap;
   gap: 12px;
 }
-
-.logo {
-  font-size: 25px;
-  font-weight: bold;
-  color: #a77bff;
-}
-
-button, select {
-  padding: 12px 18px;
-  border: none;
+.logo { font-size: 25px; font-weight: bold; color: #a77bff; }
+select {
+  padding: 12px;
+  border: 0;
   border-radius: 9px;
   cursor: pointer;
-  font-weight: bold;
 }
-
 .hero {
   text-align: center;
-  padding: 75px 20px;
+  padding: 65px 20px;
   background: linear-gradient(135deg,#171044,#102b55);
 }
-
-.hero h1 {
-  font-size: clamp(32px, 6vw, 55px);
-}
-
-.hero p {
-  color: #c7c7df;
-  font-size: 17px;
-}
-
+.hero h1 { font-size: clamp(32px,6vw,55px); }
+.hero p { color: #c7c7df; }
 .launch {
   display: inline-block;
-  margin-top: 20px;
-  padding: 16px 28px;
+  margin-top: 15px;
+  padding: 15px 25px;
   border-radius: 12px;
   background: linear-gradient(135deg,#8d43ff,#2677ff);
   color: white;
   text-decoration: none;
   font-weight: bold;
-  font-size: 18px;
 }
-
 section {
   padding: 30px 20px;
   max-width: 1100px;
   margin: auto;
 }
-
 .games {
   display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(210px,1fr));
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
   gap: 18px;
 }
-
 .card {
   background: #19192b;
   border: 1px solid #343450;
   border-radius: 14px;
-  padding: 22px;
+  padding: 20px;
 }
-
-.card h3 {
-  color: #b99aff;
+.card h3 { color: #b99aff; }
+.card p { color: #c4c4d5; }
+.demo {
+  border: 2px solid #8d43ff;
+  background: linear-gradient(145deg,#211448,#19192b);
 }
-
-.card p {
-  color: #c4c4d5;
+.status {
+  display: inline-block;
+  color: #8dffb0;
+  font-size: 13px;
+  font-weight: bold;
 }
-
 footer {
   text-align: center;
   padding: 30px;
   color: #888;
 }
-
-body.minimal {
-  background: #f4f4f4;
-  color: #171717;
+body.minimal { background: #f4f4f4; color: #171717; }
+body.minimal header, body.minimal .card {
+  background: white; color: #171717;
 }
-body.minimal header,
-body.minimal .card {
-  background: white;
-  color: #171717;
-}
-body.emerald {
-  background: #061c16;
-}
-body.emerald header,
-body.emerald .card {
-  background: #103528;
-}
-body.crimson {
-  background: #210909;
-}
-body.crimson header,
-body.crimson .card {
-  background: #391313;
-}
-
+body.emerald { background: #061c16; }
+body.emerald header, body.emerald .card { background: #103528; }
+body.crimson { background: #210909; }
+body.crimson header, body.crimson .card { background: #391313; }
 </style>
 </head>
-
 <body>
 
 <header>
   <div class="logo">iPhonekupi</div>
-
   <select id="theme" onchange="changeTheme()">
     <option value="neon">Neon Gaming</option>
     <option value="minimal">Minimal</option>
@@ -146,16 +104,19 @@ body.crimson .card {
 <div class="hero">
   <h1>Welcome to iPhonekupi</h1>
   <p>Your browser gaming platform.</p>
-
-  <a class="launch" href="engine.html">
-    🚀 Launch Engine Test World
-  </a>
+  <a class="launch" href="engine.html">🚀 Launch Engine</a>
 </div>
 
 <section>
   <h2>🎮 Game Library</h2>
-
   <div class="games">
+
+    <div class="card demo">
+      <span class="status">● PLAYABLE DEMO</span>
+      <h3>🌳 iPhonekupi Demo World</h3>
+      <p>The original iPhonekupi 3D test island. Our very first world!</p>
+      <a class="launch" href="engine.html">▶ PLAY DEMO</a>
+    </div>
 
     <div class="card">
       <h3>🌲 Forest Survival</h3>
@@ -177,7 +138,7 @@ body.crimson .card {
 
     <div class="card">
       <h3>🧟 Zombie Survival</h3>
-      <p>Try to survive the apocalypse.</p>
+      <p>Survive the apocalypse.</p>
       <p>Coming soon</p>
     </div>
 
