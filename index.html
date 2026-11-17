@@ -4,115 +4,194 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>iPhonekupi - Gaming Platform</title>
+<title>iPhonekupi</title>
 
 <style>
-* {
-  box-sizing: border-box;
+:root {
+  --bg: #090b14;
+  --panel: #171c2c;
+  --accent: #947bff;
+  --text: white;
+  --muted: #aeb4c9;
 }
 
 body {
   margin: 0;
-  background: #090b14;
-  color: white;
+  background: var(--bg);
+  color: var(--text);
   font-family: Arial, sans-serif;
+  transition: .3s;
+}
+
+body.minimal {
+  --bg: #111;
+  --panel: #202020;
+  --accent: white;
+}
+
+body.emerald {
+  --bg: #07130f;
+  --panel: #10251c;
+  --accent: #32d69a;
+}
+
+body.crimson {
+  --bg: #160909;
+  --panel: #291313;
+  --accent: #ff5555;
 }
 
 header {
+  padding: 18px 6%;
+  background: var(--panel);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 7%;
-  background: #111525;
-  border-bottom: 1px solid #252b40;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .logo {
   font-size: 25px;
   font-weight: bold;
-  color: #8b72ff;
+  color: var(--accent);
 }
 
 nav a {
-  color: white;
+  color: var(--text);
   text-decoration: none;
-  margin-left: 20px;
+  margin: 8px;
+}
+
+button, select, input {
+  border: 0;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+button {
+  background: var(--accent);
+  color: #080810;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 .hero {
   text-align: center;
-  padding: 90px 20px;
-  background: linear-gradient(135deg, #17143b, #101b36, #090b14);
+  padding: 75px 20px;
+  background: linear-gradient(135deg, var(--panel), var(--bg));
 }
 
 .hero h1 {
-  font-size: 48px;
-  margin-bottom: 12px;
+  font-size: clamp(34px, 7vw, 55px);
 }
 
-.hero h1 span {
-  color: #947bff;
+.hero span {
+  color: var(--accent);
 }
 
 .hero p {
-  color: #b6b9cc;
-  font-size: 17px;
-}
-
-button {
-  background: #7658f5;
-  color: white;
-  border: none;
-  padding: 14px 25px;
-  border-radius: 9px;
-  font-size: 16px;
-  font-weight: bold;
-  margin-top: 15px;
-}
-
-button:active {
-  transform: scale(.97);
+  color: var(--muted);
 }
 
 main {
-  padding: 35px 7%;
+  padding: 35px 6%;
 }
 
-.section-title {
-  font-size: 25px;
+.controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+input, select {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid #343950;
+}
+
+input {
+  flex: 1;
+  min-width: 180px;
 }
 
 .games {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
 }
 
 .game {
-  background: #171c2c;
-  border: 1px solid #292f46;
+  background: var(--panel);
+  padding: 22px;
   border-radius: 14px;
-  padding: 25px;
+  border: 1px solid #343950;
+  transition: .2s;
 }
 
-.game h3 {
-  margin-top: 5px;
+.game:hover {
+  transform: translateY(-4px);
+}
+
+.game .emoji {
+  font-size: 42px;
 }
 
 .game p {
-  color: #aeb4c9;
+  color: var(--muted);
+}
+
+.game button {
+  margin-top: 10px;
 }
 
 footer {
   text-align: center;
   padding: 30px;
-  color: #777e96;
-  border-top: 1px solid #252b40;
+  color: var(--muted);
+}
+
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #090b14;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: opacity .5s;
+}
+
+#loading h1 {
+  color: #947bff;
+  font-size: 34px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #292b40;
+  border-top-color: #947bff;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>
 </head>
 
 <body>
+
+<div id="loading">
+  <h1>iPhonekupi</h1>
+  <div class="spinner"></div>
+  <p>Loading your gaming world...</p>
+</div>
 
 <header>
   <div class="logo">iPhonekupi</div>
@@ -120,33 +199,62 @@ footer {
     <a href="#home">Home</a>
     <a href="#games">Games</a>
   </nav>
+  <div>
+    <button onclick="alert('Accounts coming soon!')">Sign Up</button>
+    <button onclick="alert('Login coming soon!')">Login</button>
+  </div>
 </header>
 
 <section class="hero" id="home">
-  <h1>Welcome to <span>iPhonekupi</span></h1>
-  <p>Your next gaming adventure starts here.</p>
+  <h1>Play more. Explore <span>more.</span></h1>
+  <p>Welcome to your next gaming destination.</p>
   <button onclick="document.getElementById('games').scrollIntoView({behavior:'smooth'})">
     Explore Games
   </button>
 </section>
 
 <main id="games">
-  <h2 class="section-title">🎮 Game Library</h2>
+  <h2>🎮 Game Library</h2>
+
+  <div class="controls">
+    <input id="search" placeholder="Search games..." oninput="searchGames()">
+
+    <select id="theme" onchange="changeTheme(this.value)">
+      <option value="">Neon Gaming</option>
+      <option value="minimal">Minimal</option>
+      <option value="emerald">Emerald</option>
+      <option value="crimson">Crimson</option>
+    </select>
+  </div>
+
   <div class="games">
 
     <div class="game">
-      <h3>Coming Soon</h3>
-      <p>Our first game is being developed.</p>
+      <div class="emoji">🌲</div>
+      <h3>Forest Survival</h3>
+      <p>Explore a mysterious forest.</p>
+      <button onclick="comingSoon()">Coming Soon</button>
     </div>
 
     <div class="game">
-      <h3>Coming Soon</h3>
-      <p>More adventures are on the way.</p>
+      <div class="emoji">🏙️</div>
+      <h3>City Life</h3>
+      <p>Explore a huge virtual city.</p>
+      <button onclick="comingSoon()">Coming Soon</button>
     </div>
 
     <div class="game">
-      <h3>Coming Soon</h3>
-      <p>Discover games on iPhonekupi.</p>
+      <div class="emoji">🚀</div>
+      <h3>Space Adventure</h3>
+      <p>Discover the universe.</p>
+      <button onclick="comingSoon()">Coming Soon</button>
+    </div>
+
+    <div class="game">
+      <div class="emoji">🧟</div>
+      <h3>Zombie Survival</h3>
+      <p>Survive in a dangerous world.</p>
+      <button onclick="comingSoon()">Coming Soon</button>
     </div>
 
   </div>
@@ -155,6 +263,40 @@ footer {
 <footer>
   © 2026 iPhonekupi. All rights reserved.
 </footer>
+
+<script>
+function changeTheme(theme) {
+  document.body.className = theme;
+  localStorage.setItem("iphonekupi-theme", theme);
+}
+
+function searchGames() {
+  const query = document.getElementById("search").value.toLowerCase();
+
+  document.querySelectorAll(".game").forEach(game => {
+    game.style.display =
+      game.innerText.toLowerCase().includes(query) ? "" : "none";
+  });
+}
+
+function comingSoon() {
+  alert("This game is still being developed!");
+}
+
+const savedTheme = localStorage.getItem("iphonekupi-theme");
+if (savedTheme) {
+  document.getElementById("theme").value = savedTheme;
+  changeTheme(savedTheme);
+}
+
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    const loading = document.getElementById("loading");
+    loading.style.opacity = "0";
+    setTimeout(() => loading.remove(), 500);
+  }, 1200);
+});
+</script>
 
 </body>
 </html>
