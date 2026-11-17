@@ -4,123 +4,538 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>iPhonekupi Engine v0.1</title>
+<title>iPhonekupi Engine v0.2</title>
+
 <style>
 * { box-sizing: border-box; }
+
 body {
   margin: 0;
   overflow: hidden;
   background: #87ceeb;
   font-family: Arial, sans-serif;
 }
-#info {
+
+#panel {
   position: fixed;
   top: 12px;
   left: 12px;
+  width: 245px;
+  max-width: calc(100vw - 24px);
+  padding: 14px;
   color: white;
-  background: #101020cc;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 14px;
-  z-index: 2;
+  background: #101020ed;
+  border: 1px solid #55428b;
+  border-radius: 12px;
+  z-index: 5;
 }
-canvas { display: block; }
+
+#panel h3 {
+  margin: 0 0 10px;
+  color: #b99aff;
+}
+
+#stats {
+  font-size: 13px;
+  line-height: 1.8;
+  margin-bottom: 10px;
+}
+
+button, select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 7px;
+  border: 0;
+  border-radius: 7px;
+  font-weight: bold;
+}
+
+button {
+  background: #7542e8;
+  color: white;
+  cursor: pointer;
+}
+
+select {
+  background: #292943;
+  color: white;
+}
+
+#message {
+  font-size: 12px;
+  color: #b9b9d5;
+  margin-top: 9px;
+  line-height: 1.5;
+}
+
+canvas {
+  display: block;
+}
 </style>
 </head>
+
 <body>
-<div id="info">iPhonekupi Engine v0.1<br>3D World Loading...</div>
+
+<div id="panel">
+  <h3>iPhonekupi Engine v0.2</h3>
+
+  <div id="stats">
+    FPS: measuring...<br>
+    Frame time: measuring...<br>
+    Graphics: Medium<br>
+    Mode: Automatic
+  </div>
+
+  <select id="graphics">
+    <option value="auto">Automatic Graphics</option>
+    <option value="1">Potato</option>
+    <option value="2">Low</option>
+    <option value="3">Medium</option>
+    <option value="4">High</option>
+    <option value="5">Ultra</option>
+  </select>
+
+  <button id="benchmark">Run Graphics Test</button>
+
+  <div id="message">
+    Automatic quality is enabled.
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
 <script>
+if (typeof THREE === "undefined") {
+  document.getElementById("message").textContent =
+    "3D engine failed to load. Check your internet connection.";
+  throw new Error("Three.js failed to load");
+}
+
+// ==================================
+// 1. ENGINE SETUP
+// ==================================
+
 const scene = new THREE.Scene();
+
 scene.background = new THREE.Color(0x87ceeb);
 scene.fog = new THREE.Fog(0x87ceeb, 35, 100);
 
 const camera = new THREE.PerspectiveCamera(
-  70, window.innerWidth / window.innerHeight, 0.1, 150
+  70,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  150
 );
+
 camera.position.set(12, 10, 16);
-camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({
   antialias: false,
   powerPreference: "low-power"
 });
+
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+renderer.setPixelRatio(1);
+
+renderer.shadowMap.enabled = false;
+
 document.body.appendChild(renderer.domElement);
 
-// Lighting
-scene.add(new THREE.HemisphereLight(0xffffff, 0x526b45, 2));
+// ==================================
+// 2. LIGHTING
+// ==================================
+
+scene.add(
+  new THREE.HemisphereLight(0xffffff, 0x526b45, 2)
+);
 
 const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+
 sun.position.set(10, 20, 10);
+sun.castShadow = true;
+
+sun.shadow.camera.left = -20;
+sun.shadow.camera.right = 20;
+sun.shadow.camera.top = 20;
+sun.shadow.camera.bottom = -20;
+sun.shadow.camera.near = 0.5;
+sun.shadow.camera.far = 60;
+
 scene.add(sun);
 
-// Ground
+// ==================================
+// 3. WORLD
+// ==================================
+
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 100),
   new THREE.MeshLambertMaterial({ color: 0x4b9b45 })
 );
+
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.1;
+ground.receiveShadow = true;
+
 scene.add(ground);
 
-// Central platform
 const island = new THREE.Mesh(
   new THREE.CylinderGeometry(12, 13, 2, 8),
   new THREE.MeshLambertMaterial({ color: 0x397d37 })
 );
+
 island.position.y = -1.1;
+island.receiveShadow = true;
+
 scene.add(island);
 
-// Shared tree geometry
-const trunkGeometry = new THREE.CylinderGeometry(0.25, 0.35, 2, 6);
-const leavesGeometry = new THREE.ConeGeometry(1.3, 3, 6);
-const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x70452a });
-const leavesMaterial = new THREE.MeshLambertMaterial({ color: 0x216b32 });
+// ==================================
+// 4. OPTIMISED TREES
+// ==================================
 
-function makeTree(x, z, scale = 1) {
-  const tree = new THREE.Group();
+// Instanced meshes reuse geometry and materials.
+// Eight trees use only two instanced objects.
 
-  const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-  trunk.position.y = scale;
-  trunk.scale.setScalar(scale);
-  tree.add(trunk);
+const treePositions = [
+  [-7,-5], [-5,7], [7,6], [6,-7],
+  [-9,1], [9,-1], [0,9], [1,-9]
+];
 
-  const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
-  leaves.position.y = 2.7 * scale;
-  leaves.scale.setScalar(scale);
-  tree.add(leaves);
+const trunkGeometry = new THREE.CylinderGeometry(
+  0.25, 0.35, 2, 6
+);
 
-  tree.position.set(x, 0, z);
-  scene.add(tree);
-}
+const leafGeometry = new THREE.ConeGeometry(
+  1.3, 3, 6
+);
 
-// Trees around the island
-[
-  [-7,-5],[-5,7],[7,6],[6,-7],
-  [-9,1],[9,-1],[0,9],[1,-9]
-].forEach(([x,z]) => makeTree(x,z));
-
-// Rocks
-const rockGeometry = new THREE.DodecahedronGeometry(0.8, 0);
-const rockMaterial = new THREE.MeshLambertMaterial({ color: 0x777777 });
-
-[
-  [-3,-3],[3,4],[5,-2],[-5,3]
-].forEach(([x,z]) => {
-  const rock = new THREE.Mesh(rockGeometry, rockMaterial);
-  rock.position.set(x, 0.4, z);
-  rock.scale.set(1.2, 0.8, 1);
-  scene.add(rock);
+const trunkMaterial = new THREE.MeshLambertMaterial({
+  color: 0x70452a
 });
 
-// Simple rotating camera
+const leafMaterial = new THREE.MeshLambertMaterial({
+  color: 0x216b32
+});
+
+const trunks = new THREE.InstancedMesh(
+  trunkGeometry, trunkMaterial, treePositions.length
+);
+
+const leaves = new THREE.InstancedMesh(
+  leafGeometry, leafMaterial, treePositions.length
+);
+
+const dummy = new THREE.Object3D();
+
+treePositions.forEach(([x,z], i) => {
+  dummy.position.set(x, 1, z);
+  dummy.updateMatrix();
+  trunks.setMatrixAt(i, dummy.matrix);
+
+  dummy.position.set(x, 2.7, z);
+  dummy.updateMatrix();
+  leaves.setMatrixAt(i, dummy.matrix);
+});
+
+trunks.castShadow = true;
+leaves.castShadow = true;
+
+scene.add(trunks);
+scene.add(leaves);
+
+// ==================================
+// 5. OPTIMISED ROCKS
+// ==================================
+
+const rockPositions = [
+  [-3,-3], [3,4], [5,-2], [-5,3]
+];
+
+const rocks = new THREE.InstancedMesh(
+  new THREE.DodecahedronGeometry(0.8, 0),
+  new THREE.MeshLambertMaterial({ color: 0x777777 }),
+  rockPositions.length
+);
+
+rockPositions.forEach(([x,z], i) => {
+  dummy.position.set(x, 0.4, z);
+  dummy.rotation.set(0, i, 0);
+  dummy.scale.set(1.2, 0.8, 1);
+  dummy.updateMatrix();
+  rocks.setMatrixAt(i, dummy.matrix);
+});
+
+rocks.castShadow = true;
+scene.add(rocks);
+
+// ==================================
+// 6. ADAPTIVE QUALITY SYSTEM
+// ==================================
+
+// Internal quality steps:
+// 1.0, 1.5, 2.0, 2.5 ... 5.0
+//
+// These fractional levels are not shown
+// in the normal graphics menu.
+
+let quality = 2.5;
+let automatic = true;
+
+function visibleQuality(q) {
+  if (q < 1.75) return "Potato";
+  if (q < 2.75) return "Low";
+  if (q < 3.75) return "Medium";
+  if (q < 4.75) return "High";
+  return "Ultra";
+}
+
+function applyQuality(q) {
+  quality = Math.max(1, Math.min(5, q));
+
+  const pixelTargets = {
+    1: 0.65,
+    1.5: 0.75,
+    2: 0.85,
+    2.5: 0.95,
+    3: 1.0,
+    3.5: 1.1,
+    4: 1.2,
+    4.5: 1.3,
+    5: 1.45
+  };
+
+  const target = pixelTargets[quality] || 1;
+
+  renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, target)
+  );
+
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+  // Shadows are reserved for higher settings.
+  renderer.shadowMap.enabled = quality >= 4;
+
+  sun.castShadow = quality >= 4;
+
+  sun.shadow.mapSize.set(
+    quality >= 4.5 ? 1024 : 512,
+    quality >= 4.5 ? 1024 : 512
+  );
+
+  sun.shadow.needsUpdate = true;
+
+  document.getElementById("stats").innerHTML =
+    "FPS: measuring...<br>" +
+    "Frame time: measuring...<br>" +
+    "Graphics: " + visibleQuality(quality) + "<br>" +
+    "Mode: " + (automatic ? "Automatic" : "Manual");
+}
+
+applyQuality(quality);
+
+// ==================================
+// 7. GRAPHICS MENU
+// ==================================
+
+const graphicsMenu = document.getElementById("graphics");
+
+graphicsMenu.addEventListener("change", () => {
+  if (graphicsMenu.value === "auto") {
+    automatic = true;
+    goodCount = 0;
+    poorCount = 0;
+
+    document.getElementById("message").textContent =
+      "Automatic graphics enabled.";
+
+  } else {
+    automatic = false;
+    goodCount = 0;
+    poorCount = 0;
+
+    applyQuality(Number(graphicsMenu.value));
+
+    document.getElementById("message").textContent =
+      "Manual graphics selected.";
+  }
+});
+
+// ==================================
+// 8. PERFORMANCE MONITOR
+// ==================================
+
+let lastFrame = performance.now();
+let lastStats = performance.now();
+
+let frameTimes = [];
+let goodCount = 0;
+let poorCount = 0;
+
+let benchmarkRunning = false;
+let benchmarkFrames = 0;
+let benchmarkResults = [];
+
+function updatePerformance(now) {
+  const averageFrameTime =
+    frameTimes.reduce((a,b) => a+b, 0) /
+    Math.max(frameTimes.length, 1);
+
+  const fps = 1000 / averageFrameTime;
+
+  document.getElementById("stats").innerHTML =
+    "FPS: " + fps.toFixed(1) + "<br>" +
+    "Frame time: " + averageFrameTime.toFixed(1) + " ms<br>" +
+    "Graphics: " + visibleQuality(quality) + "<br>" +
+    "Mode: " + (automatic ? "Automatic" : "Manual");
+
+  if (!automatic || benchmarkRunning) return;
+
+  // Require repeated measurements before changing quality.
+
+  if (fps < 38 || averageFrameTime > 28) {
+    poorCount++;
+    goodCount = 0;
+  } else if (fps > 58 && averageFrameTime < 18) {
+    goodCount++;
+    poorCount = 0;
+  } else {
+    goodCount = 0;
+    poorCount = 0;
+  }
+
+  // Lower quality after sustained slowdown.
+  if (poorCount >= 3 && quality > 1) {
+    applyQuality(quality - 0.5);
+    poorCount = 0;
+
+    document.getElementById("message").textContent =
+      "Performance drop detected. Adjusting graphics.";
+  }
+
+  // Carefully restore quality after sustained stability.
+  if (goodCount >= 8 && quality < 5) {
+    applyQuality(quality + 0.5);
+    goodCount = 0;
+
+    document.getElementById("message").textContent =
+      "Performance is stable. Testing higher quality.";
+  }
+}
+
+// ==================================
+// 9. GRAPHICS BENCHMARK
+// ==================================
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+document.getElementById("benchmark").addEventListener(
+  "click",
+  async () => {
+    if (benchmarkRunning) return;
+
+    benchmarkRunning = true;
+    automatic = false;
+    graphicsMenu.value = "auto";
+
+    const button = document.getElementById("benchmark");
+    const message = document.getElementById("message");
+
+    button.disabled = true;
+    benchmarkResults = [];
+
+    const levels = [
+      1, 1.5, 2, 2.5, 3,
+      3.5, 4, 4.5, 5
+    ];
+
+    message.textContent =
+      "Benchmark starting. Please wait...";
+
+    for (const level of levels) {
+      applyQuality(level);
+
+      message.textContent =
+        "Testing " + visibleQuality(level) +
+        " graphics. Please wait...";
+
+      // Allow the renderer to settle.
+      await wait(500);
+
+      benchmarkFrames = 0;
+      const start = performance.now();
+
+      await wait(1800);
+
+      const elapsed = performance.now() - start;
+      const measuredFPS =
+        benchmarkFrames / (elapsed / 1000);
+
+      benchmarkResults.push({
+        level: level,
+        fps: measuredFPS
+      });
+    }
+
+    // Choose the highest tested quality
+    // that maintained at least 45 FPS.
+
+    const acceptable = benchmarkResults.filter(
+      result => result.fps >= 45
+    );
+
+    let best;
+
+    if (acceptable.length > 0) {
+      best = acceptable[acceptable.length - 1];
+    } else {
+      best = benchmarkResults.reduce(
+        (a,b) => b.fps > a.fps ? b : a
+      );
+    }
+
+    applyQuality(best.level);
+
+    benchmarkRunning = false;
+    automatic = true;
+    graphicsMenu.value = "auto";
+
+    message.textContent =
+      "Test complete! Recommended graphics: " +
+      visibleQuality(best.level) +
+      ". Automatic adjustments are enabled.";
+
+    button.disabled = false;
+  }
+);
+
+// ==================================
+// 10. MAIN ENGINE LOOP
+// ==================================
+
 let angle = 0;
 
 function animate() {
   requestAnimationFrame(animate);
+
+  const now = performance.now();
+
+  const delta = Math.min(now - lastFrame, 100);
+  lastFrame = now;
+
+  frameTimes.push(delta);
+
+  if (frameTimes.length > 60) {
+    frameTimes.shift();
+  }
+
+  if (benchmarkRunning) {
+    benchmarkFrames++;
+  }
+
   angle += 0.0015;
 
   camera.position.x = Math.sin(angle) * 20;
@@ -129,18 +544,34 @@ function animate() {
   camera.lookAt(0, 0, 0);
 
   renderer.render(scene, camera);
+
+  if (now - lastStats >= 1000) {
+    updatePerformance(now);
+    lastStats = now;
+  }
 }
+
 animate();
 
-// Resize support
+// ==================================
+// 11. RESIZE SUPPORT
+// ==================================
+
 window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect =
+    window.innerWidth / window.innerHeight;
+
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
 });
 
-document.getElementById("info").innerHTML =
-  "iPhonekupi Engine v0.1<br>3D World Running";
+document.getElementById("message").textContent =
+  "Engine v0.2 running. Automatic quality enabled.";
+
 </script>
 </body>
 </html>
